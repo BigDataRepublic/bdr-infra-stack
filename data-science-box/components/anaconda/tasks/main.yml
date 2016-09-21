@@ -51,16 +51,16 @@
 - name: Add required sudo privileges for sudospawner (1/3)
   lineinfile:
     dest: /etc/sudoers
-    regexp: "Alias JUPYTER_CMD"
-    line: "Cmnd_Alias JUPYTER_CMD = {{ anaconda_install_dir}}/bin/sudospawner"
+    regexp: "Alias SUDOSPAWNER_CMD"
+    line: "Cmnd_Alias SUDOSPAWNER_CMD = {{ anaconda_install_dir}}/bin/sudospawner"
     validate: "visudo -cf %s"
     state: present
 
 - name: Add required sudo privileges for sudospawner (2/3)
   lineinfile:
     dest: /etc/sudoers
-    regexp: "NOPASSWD:JUPYTER_CMD"
-    line: "rhea ALL=(%jupyterhub) NOPASSWD:JUPYTER_CMD"
+    regexp: "NOPASSWD:SUDOSPAWNER_CMD"
+    line: "rhea ALL=(%jupyterhub) NOPASSWD:SUDOSPAWNER_CMD"
     validate: "visudo -cf %s"
     state: present
 
