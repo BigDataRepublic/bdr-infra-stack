@@ -1,4 +1,4 @@
-
+---
 
 - name: Check parameters
   assert:
@@ -6,4 +6,8 @@
       - anaconda_install_dir is defined
 
 - name: Install jupyter single user service
-  template: src= dest=/lib/systemd/system/jupyter.service mode=0644
+  template: src=jupyter.service.j2 dest=/lib/systemd/system/jupyter.service mode=0644
+  notify:
+    - daemon_reload
+    - restart_jupyter
+
