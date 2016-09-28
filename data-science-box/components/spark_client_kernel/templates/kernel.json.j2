@@ -1,8 +1,8 @@
 {
- "display_name": "PySpark {{ spark_client_version }}",
+ "display_name": "{{ conda_env_name }}-PySpark {{ spark_client_version }}",
  "language": "python",
  "argv": [
-  "{{ anaconda_install_dir }}/envs/{{ spark_client_conda_env }}/bin/python",
+  "{{ anaconda_install_dir }}/envs/{{ conda_env_name }}/bin/python",
   "-m",
   "ipykernel",
   "-f",
@@ -10,7 +10,7 @@
  ],
  "env": {
     "SPARK_HOME": "{{ spark_client_home }}",
-    "PYSPARK_PYTHON": "{{ anaconda_install_dir }}/envs/{{ spark_client_conda_env }}/bin/python",
+    "PYSPARK_PYTHON": "{{ anaconda_install_dir }}/envs/{{ conda_env_name }}/bin/python",
     "PYTHONPATH": "{{ spark_client_home }}/python/:{{ spark_client_py4j_path }}",
     "PYTHONSTARTUP": "{{ spark_client_home }}/python/pyspark/shell.py",
     "PYSPARK_SUBMIT_ARGS": "--master local[*] pyspark-shell --packages com.databricks:spark-csv_2.11:{{ spark_client_version.split('-')[0] }}"

@@ -1,0 +1,41 @@
+---
+- name: Check parameters
+  assert:
+    that:
+      - spark_client_version is defined
+      - conda_env_name is defined
+      - spark_client_install_dir is defined
+      - anaconda_install_dir is defined
+
+- set_fact:
+    spark_client_home: "{{ spark_client_install_dir }}/{{ spark_client_version }}"
+
+- set_fact:
+    kernel_path: "/usr/local/share/jupyter/kernels/{{ conda_env_name }}-spark-{{ spark_client_version }}/"
+
+- name: Remove Jupyter kernel {{ spark_client_version }}
+  file: path="{{ kernel_path }}" state=absent
+  when: spark_client_create_kernel == False
+
+- name: Get shipped py4j path
+  find: paths="{{ spark_client_home }}/python/lib" use_regex=True patterns=".*py4j.*"
+  register: tmp_out
+
+- set_fact:
+    spark_client_py4j_path: "{{ tmp_out.files[0].path }}"
+
+- name: Create Spark client {{ spark_client_version }} kernel dir
+  file: state=directory dest="{{ kernel_path }}" owner=rhea group=jupyterhub
+  when: spark_client_create_kernel == True
+
+- name: Install Jupyter kernel {{ spark_client_version }}
+  template: src=kernel.json.j2 dest="{{kernel_path}}/kernel.json"
+  when: spark_client_create_kernel == True
+
+- name: Create env variable loader 'load_env_{{ spark_client_version }}.sh'
+  template: src=load_env.sh.j2 dest="{{ anaconda_install_dir }}/envs/{{ conda_env_name }}/bin/load_env_{{ spark_client_version}}.sh" mode="u+x,g+x"
+  when: spark_client_create_kernel == True
+
+- name: Create env variable loader {{ spark_client_version }}
+  template: src=unload_env.sh.j2 dest="{{ anaconda_install_dir }}/envs/{{ conda_env_name }}/bin/unload_env_{{ spark_client_version}}.sh" mode="u+x,g+x"
+  when: spark_client_create_kernel == True
