@@ -33,3 +33,6 @@ vagrant destroy
 ```
 
 After fully provisioned the Jupyter notebook should be available at http://10.0.0.42
+
+## Note for Windows Users
+Don't use spaces in either directories or filenames. This will cause an error when saving notebooks as the path can not be specified correctly.
