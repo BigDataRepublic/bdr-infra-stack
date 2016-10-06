@@ -1,0 +1,5 @@
+[bdr-data-science-hub]
+bdr-data-science-hub ansible_connection=local
+
+
+

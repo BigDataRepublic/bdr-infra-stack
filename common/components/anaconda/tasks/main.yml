@@ -117,6 +117,4 @@
 - name: Configure JupyterHub
   template: src=jupyterhub_config.py.j2 dest=/etc/jupyterhub/jupyterhub_config.py mode=0744 owner=rhea group=jupyterhub
 
-#- name: Ensure privileges on {{ anaconda_install_dir }} are correct
-#  file: state=directory mode=0755 owner=rhea group=jupyterhub recurse=yes path="{{ anaconda_install_dir }}"
 

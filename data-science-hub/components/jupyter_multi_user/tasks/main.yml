@@ -11,3 +11,6 @@
     - daemon_reload
     - restart_jupyterhub
 
+- name: Ensure privileges on {{ anaconda_install_dir }} are correct
+  file: state=directory mode=0755 owner=rhea group=jupyterhub recurse=yes path="{{ anaconda_install_dir }}"
+
