@@ -6,7 +6,7 @@
 
 - name: Check for current Anaconda installation
   stat: path={{ anaconda_install_dir }}
-  register: anaconda_install
+  register: tmp_anaconda_install
 
 
 - name: Download Anaconda 3
@@ -14,12 +14,12 @@
     url: https://repo.continuum.io/archive/Anaconda3-4.1.1-Linux-x86_64.sh
     dest: /tmp/install-anaconda.sh
     mode: 0744
-  when: anaconda_install.stat.exists == False
+  when: tmp_anaconda_install.stat.exists == False
 
 
 - name: Install Anaconda 3
   shell: /tmp/install-anaconda.sh -b -p {{ anaconda_install_dir }} -f
-  when: anaconda_install.stat.exists == False
+  when: tmp_anaconda_install.stat.exists == False
 
 - name: Ensure anaconda is on PATH
   lineinfile:
@@ -32,7 +32,7 @@
 # Does not work when first started, todo: fix this later.
 #- name: Update conda extensions to latest version
 #  command: conda update nb_conda nb_conda_kernels nb_anacondacloud
-#  when: anaconda_install.stat.exists == False
+#  when: tmp_anaconda_install.stat.exists == False
 
 
 - name: Install nodejs
@@ -44,11 +44,11 @@
 
 - name: Check if configurable-http-proxy is installed (fast way)
   stat: path=/usr/lib/node_modules/configurable-http-proxy
-  register: proxy_installed
+  register: tmp_proxy_installed
 
 - name: Install configurable-http-proxy (npm)
   npm: name=configurable-http-proxy global=yes production=yes state=present
-  when: proxy_installed.stat.exists == False
+  when: tmp_proxy_installed.stat.exists == False
 
 - name: Add jupyterhub group
   group: name=jupyterhub state=present
@@ -60,7 +60,7 @@
     executable: "{{ anaconda_install_dir}}/bin/pip"
     state: present
     editable: False
-  when: anaconda_install.stat.exists == False
+  when: tmp_anaconda_install.stat.exists == False
 
 - name: Add required sudo privileges for sudospawner (1/4)
   lineinfile:

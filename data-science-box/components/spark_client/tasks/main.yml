@@ -10,36 +10,40 @@
   package: name=java-1.8.0-openjdk state=present
 
 - set_fact:
-    spark_client_home: "{{ spark_client_install_dir }}/{{ spark_client_version }}"
+    tmp_home: "{{ spark_client_install_dir }}/{{ spark_client_version }}"
 
 - name: Purge current Spark client {{ spark_client_version }} installation
-  file: path={{ spark_client_home }} state=absent
+  file: path={{ tmp_home }} state=absent
   when: spark_client_force_install
 
 - name: Check for current Spark client {{ spark_client_version }} installation
-  stat: path={{ spark_client_home }}
-  register: spark_client_install
+  stat: path={{ tmp_home }}
+  register: tmp_install
 
 
 - name: Create Spark client {{ spark_client_version }} install dir
-  file: state=directory dest={{ spark_client_home }} owner=rhea group=jupyterhub
+  file: state=directory dest={{ tmp_home }} owner=rhea group=jupyterhub
 
 - name: Download Spark client {{ spark_client_version }}
   get_url:
     url: "{{ spark_client_url }}"
     dest: "/tmp/spark-client-{{ spark_client_version }}.tgz"
     mode: 0644
-  when: spark_client_install.stat.exists == False
+  when: tmp_install.stat.exists == False
 
 - name: Create current Spark client {{ spark_client_version }} install dir
-  file: path={{ spark_client_home }} state=directory
-  when: spark_client_install.stat.exists == False
+  file: path={{ tmp_home }} state=directory
+  when: tmp_install.stat.exists == False
 
 - name: Unpack Spark client {{ spark_client_version }} (unarchive strip components is bugged)
-  command: "tar --strip-components=1 -xf /tmp/spark-client-{{ spark_client_version }}.tgz -C {{ spark_client_home }}"
-  when: spark_client_install.stat.exists == False
+  command: "tar --strip-components=1 -xf /tmp/spark-client-{{ spark_client_version }}.tgz -C {{ tmp_home }}"
+  when: tmp_install.stat.exists == False
 
 - name: Ensure ownership + permissions on spark client dirs
-  file: path={{ spark_client_home }} recurse=yes state=directory owner=rhea group=jupyterhub mode=0744
-  when: spark_client_install.stat.exists == False
+  file: path={{ tmp_home }} recurse=yes state=directory owner=rhea group=jupyterhub mode=0744
+  when: tmp_install.stat.exists == False
+
+- name: Define Outputs
+  set_fact:
+    spark_client: "{{ {'output': {'home': tmp_home , 'version': spark_client_version }} }}"
 
