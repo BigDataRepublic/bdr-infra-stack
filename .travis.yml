@@ -5,6 +5,9 @@ env:
   - distro: centos7
     init: /usr/lib/systemd/systemd
     run_opts: "--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    playbook: provision.yml
+    inventory: example-inventory/dev
+    working_dir: data-science-box
 
 services:
   - docker
@@ -19,14 +22,14 @@ script:
   - 'sudo docker run --detach --volume="${PWD}":/opt/bdr-infra-stack:ro ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"'
 
   # Ansible syntax check.
-  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd /opt/bdr-infra-stack/data-science-box && ansible-playbook provision.yml --syntax-check"'
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory} --syntax-check"'
 
   # Test role.
-  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd /opt/bdr-infra-stack/data-science-box && ansible-playbook provision.yml"'
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory}"'
 
   # Test role idempotence.
   - idempotence=$(mktemp)
-  - sudo docker exec "$(cat ${container_id})" /bin/bash -c "cd /opt/bdr-infra-stack/data-science-box && ansible-playbook provision.yml" | tee -a ${idempotence}
+  - sudo docker exec "$(cat ${container_id})" /bin/bash -c "cd /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory}" | tee -a ${idempotence}
   - >
     tail ${idempotence}
     | grep -q 'changed=0.*failed=0'
