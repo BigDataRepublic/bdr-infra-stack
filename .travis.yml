@@ -27,6 +27,11 @@ script:
   # Run container in detached state.
   - 'sudo docker run --detach --volume="${PWD}":/opt/bdr-infra-stack:ro ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"'
 
+  #  Install required tools (to be added to ansible script prerequisites).
+  - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python"'
+
+
+
   # Ansible syntax check.
   - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory} --syntax-check"'
 
