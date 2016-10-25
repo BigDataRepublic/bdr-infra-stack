@@ -5,7 +5,9 @@
     - repositories
     - { role: repositories, repositories: "{{ {'hdp': {'url': 'http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.5.0.0/hdp.repo'} } }}"}
     - monitoring
-    - { role: spark_client, spark_client_version: "2.0.1-hadoop-2.7", spark_client_url: "http://d3kbcqa49mib13.cloudfront.net/spark-2.0.1-bin-hadoop2.7.tgz"}
+    - { role: spark_client, spark_client_version: "2.0.1-hadoop-2.7", spark_client_url: "http://d3kbcqa49mib13.cloudfront.net/spark-2.0.1-bin-hadoop2.7.tgz",
+        spark_client_install_dir: /opt/spark
+      }
     - { role: spark_configuration, spark_configuration_home: "{{ spark_client.output.home }}",
         spark_configuration_workermemory: 3g,
         spark_configuration_drivermemory: 3g,

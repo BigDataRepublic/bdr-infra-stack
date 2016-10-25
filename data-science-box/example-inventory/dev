@@ -1,5 +1,2 @@
 [bdr-data-science-box]
-bdr-data-science-box ansible_connection=local
-
-
-
+bdr-data-science-box ansible_connection=local spark_client_owner=rhea spark_client_group=jupyterhub

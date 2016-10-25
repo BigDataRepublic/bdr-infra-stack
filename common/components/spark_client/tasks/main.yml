@@ -22,7 +22,7 @@
 
 
 - name: Create Spark client {{ spark_client_version }} install dir
-  file: state=directory dest={{ tmp_home }} owner=rhea group=jupyterhub
+  file: state=directory dest={{ tmp_home }}
 
 - name: Download Spark client {{ spark_client_version }}
   get_url:
@@ -39,11 +39,26 @@
   command: "tar --strip-components=1 -xf /tmp/spark-client-{{ spark_client_version }}.tgz -C {{ tmp_home }}"
   when: tmp_install.stat.exists == False
 
+- name: create group
+  group:
+    name: "{{ spark_client_group}}"
+    state: present
+  when: spark_client_force_owner
+
+- name: create user
+  user:
+    name: "{{ spark_client_owner }}"
+    group: "{{ spark_client_group }}"
+  when: spark_client_force_owner
+
 - name: Ensure ownership + permissions on spark client dirs
-  file: path={{ tmp_home }} recurse=yes state=directory owner=rhea group=jupyterhub mode=0744
-  when: tmp_install.stat.exists == False
+  file: path={{ tmp_home }} recurse=yes state=directory owner="{{ spark_client_owner }}" group="{{ spark_client_group }}" mode=0744
+  when: tmp_install.stat.exists == False and spark_client_force_owner
 
 - name: Define Outputs
   set_fact:
     spark_client: "{{ {'output': {'home': tmp_home , 'version': spark_client_version }} }}"
+
+- name: Show spark_client outputs
+  debug: var=spark_client
 
