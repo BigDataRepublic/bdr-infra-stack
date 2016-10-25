@@ -1,0 +1,20 @@
+---
+
+- name: Check parameters
+  assert:
+    that:
+      - kafka_topic_name is defined
+      - kafka_topic_home_dir is defined
+      - kafka_topic_zookeeper is defined
+
+- name: Get existing topics
+  command: "{{ kafka_topic_home_dir }}/bin/kafka-topics.sh --list --zookeeper {{ kafka_topic_zookeeper | join(',') }}"
+  register: kafka_topic_current
+
+- name: "Create topic {{ kafka_topic_name }}"
+  command: "{{ kafka_topic_home_dir }}/bin/kafka-topics.sh --create --zookeeper {{ kafka_topic_zookeeper | join(',') }} --replication-factor {{ kafka_topic_replication }} --partitions {{ kafka_topic_partitions }} --topic {{ kafka_topic_name }}"
+  when: " ('{{ kafka_topic_name }}' not in kafka_topic_current.stdout_lines ) and not {{ kafka_topic_purge }}"
+
+- name: "Delete topic {{ kafka_topic_name }}"
+  command: "{{ kafka_topic_home_dir }}/bin/kafka-topics.sh --delete --zookeeper {{ kafka_topic_zookeeper | join(',') }} --topic {{ kafka_topic_name }}"
+  when: " ('{{ kafka_topic_name }}' in kafka_topic_current.stdout_lines ) and {{ kafka_topic_purge }}"

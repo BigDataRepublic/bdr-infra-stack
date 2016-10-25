@@ -1,0 +1,31 @@
+# required: vagrant plugin install vagrant-vbguest
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.ssh.insert_key = false
+  config.vbguest.auto_update = true
+
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "dev-cluster.yml"
+    ansible.inventory_path = "example-inventory/dev"
+    ansible.provisioning_path = "/vagrant/data-science-cluster"
+    ansible.raw_arguments = ['-u vagrant']
+  end
+
+  config.vm.synced_folder "..", "/vagrant", type: "virtualbox"
+
+  config.vm.define "bdr-data-science-cluster", autostart: true do |vm|
+      vm.vm.hostname = "bdr-data-science-cluster"
+      vm.vm.network "private_network", ip: "10.0.0.44"
+      #can mount other folders: vm.vm.synced_folder "../", "/mnt/projects",  :mount_options => ["dmode=644,fmode=644"]
+
+      # Provision virtualbox:
+      vm.vm.provider "virtualbox" do |vb|
+        vb.memory = 9000 #12288 # 12 GB
+        vb.cpus = 7
+        vb.customize ["modifyvm", :id, "--usb", "off"]
+        vb.customize ["modifyvm", :id, "--usbehci", "off"]
+      end
+  end
+
+
+end

@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - repositories
+    - { role: repositories, repositories: "{{ {'hdp': {'url': 'http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.5.0.0/hdp.repo'} } }}"}
+    - monitoring
+    - { role: spark_client, spark_client_version: "2.0.1-hadoop-2.7", spark_client_url: "http://d3kbcqa49mib13.cloudfront.net/spark-2.0.1-bin-hadoop2.7.tgz"}
+    - { role: spark_configuration, spark_configuration_home: "{{ spark_client.output.home }}",
+        spark_configuration_workermemory: 3g,
+        spark_configuration_drivermemory: 3g,
+        spark_configuration_daemonmemory: 1g}
+    - { role: zookeeper, zookeeper_hosts: "{{ groups['zookeeper']|map('extract', hostvars, ['advertised_host']) |list }}"}
+
+- hosts: sparkmasters
+  become: yes
+  roles:
+    - { role: spark_master, spark_master_home: "{{ spark_client.output.home}}"}
+
+- hosts: sparkworkers
+  become: yes
+  roles:
+    - { role: spark_worker, spark_worker_home: "{{ spark_client.output.home}}", spark_worker_masters: "10.0.0.44:7077"}
+
+- hosts: kafka
+  become: yes
+  roles:
+   - { role: kafka, kafka_zookeeper: "{{ zookeeper.output.connect }}" }
+   - { role: kafka_topic, kafka_topic_zookeeper: "{{ zookeeper.output.connect }}", kafka_topic_name: "test"}

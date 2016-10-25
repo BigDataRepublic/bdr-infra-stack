@@ -1,0 +1,20 @@
+[Unit]
+Description=Spark Master node
+Wants=network.target network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=forking
+User=spark
+Environment=SPARK_MASTER_PORT={{spark_master_work_port}}
+Environment=SPARK_MASTER_HOST={{ advertised_host }}
+Environment=SPARK_MASTER_WEBUI_PORT={{ spark_master_ui_port }}
+Environment=SPARK_LOCAL_IP={{ advertised_host }}
+WorkingDirectory={{ spark_master_working_dir }}
+ExecStart={{ spark_master_home }}/sbin/start-master.sh
+ExecStop={{ spark_master_home }}/sbin/stop-master.sh
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+

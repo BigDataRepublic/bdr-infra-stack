@@ -1,0 +1,31 @@
+---
+- name: Check parameters
+  assert:
+    that:
+      - spark_configuration_home is defined
+
+- name: create spark directory
+  file: path={{ item }}/conf state=directory owner=spark group=spark
+  with_items: "{{ spark_configuration_home }}"
+  tags:
+    - spark
+    - slaves
+
+- name: create spark tmp directory
+  file: path=/tmp/spark-events state=directory owner=spark group=spark
+  tags:
+    - spark
+    - slaves
+
+- name: copy spark-env.sh
+  template: src=spark-env.sh dest={{ spark_configuration_home }}/conf/spark-env.sh owner=spark group=spark
+  tags:
+    - spark
+    - slaves
+
+- name: copy spark-defaults
+  template: src=spark-defaults.conf dest={{ spark_configuration_home }}/conf/spark-defaults.conf owner=spark group=spark
+  tags:
+    - spark
+    - slaves
+
