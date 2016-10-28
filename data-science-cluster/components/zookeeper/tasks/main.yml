@@ -66,5 +66,5 @@
     zookeeper: "{{ {'output': {'connect': zookeeper_hosts | format_list('%s:' + '%d' % zookeeper_client_port) }} }}"
 
 - name: Show zookeeper outputs
-- debug: var=zookeeper
+  debug: var=zookeeper
 
