@@ -20,6 +20,12 @@ env:
     playbook: dev-cluster.yml
     inventory: example-inventory/dev
     working_dir: data-science-cluster
+  - distro: centos7
+    init: /usr/lib/systemd/systemd
+    run_opts: "--privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    playbook: provision.yml
+    inventory: example-inventory/dev
+    working_dir: search-box
 
 services:
   - docker

@@ -1,0 +1,13 @@
+---
+
+- name: add logstash repo
+  yum_repository:
+    name: logstash_repository
+    description: Some YUM repo
+    baseurl: https://packages.elastic.co/logstash/{{logstash_version}}/centos
+    gpgkey: https://packages.elastic.co/GPG-KEY-elasticsearch
+    gpgcheck: yes
+
+- name: install logstash
+  yum: name=logstash state=present update_cache=yes
+  notify: start logstash

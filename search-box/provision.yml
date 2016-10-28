@@ -1,0 +1,10 @@
+---
+- hosts: bdr-elk-security-stack
+  become: yes
+  become_user: root
+
+  roles:
+   - elastic
+   - kibana
+   - logstash
+   - nginx

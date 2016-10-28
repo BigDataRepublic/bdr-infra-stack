@@ -1,0 +1,22 @@
+---
+
+- name: add kibana repo
+  yum_repository:
+    name: kibana_repository
+    description: Some YUM repo
+    baseurl: https://packages.elastic.co/kibana/{{kibana_full_version}}/centos
+    gpgkey: https://packages.elastic.co/GPG-KEY-elasticsearch
+    gpgcheck: yes
+
+- name: install kibana
+  yum: name=kibana state=present update_cache=yes
+
+- name: Copy Kibana configuration.
+  template:
+    src: kibana4.yml.j2
+    dest: "/opt/kibana/config/kibana.yml"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart nginx
+  notify: restart kibana

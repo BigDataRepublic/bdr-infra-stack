@@ -1,0 +1,5 @@
+---
+# handlers
+
+- name: start logstash
+  service: name=logstash state=started
