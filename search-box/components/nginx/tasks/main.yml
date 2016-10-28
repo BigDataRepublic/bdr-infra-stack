@@ -1,0 +1,30 @@
+---
+- name: install EPEL
+  yum: name=epel-release state=present
+
+
+- name: install python-pip
+  become: true
+  shell:  curl https://bootstrap.pypa.io/get-pip.py |   python2.7 -
+
+- name: install passlib
+  pip: name=passlib
+
+- name: install nginx, httpd-tools
+  yum: state=present name={{ item }}
+  with_items:
+  - nginx
+  - httpd-tools
+
+- name: create kibana admin user
+  htpasswd: path=/etc/nginx/htpasswd.users name=kibanaadmin password=admin
+  become: true
+
+
+- name: Create the nginx config for the Kibana reverse proxy
+  template: src=nginx.conf dest=/etc/nginx/nginx.conf
+  notify: start nginx
+
+- name: Create the nginx config for the Kibana reverse proxy
+  template: src=kibana.conf.j2 dest=/etc/nginx/conf.d/kibana.conf mode=0644 owner=root group=root
+  notify: start nginx
