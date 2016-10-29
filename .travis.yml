@@ -40,8 +40,9 @@ before_install:
 
 script:
   - container_id=$(mktemp)
+  - 'docker network create -d bridge my-net'
   # Run container in detached state.
-  - 'sudo docker run --detach --ip=$IP --volume="${PWD}":/opt/bdr-infra-stack:ro ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"'
+  - 'sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"'
 
   #  Install required tools (to be added to ansible script prerequisites).
   - 'sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "yum update -y && yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted selinux-policy libselinux-utils"'
