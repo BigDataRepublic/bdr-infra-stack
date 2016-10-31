@@ -40,7 +40,7 @@ before_install:
 
 script:
   - container_id=$(mktemp)
-  - 'docker network create -d bridge my-net'
+  - 'docker network create --driver=bridge --subnet=10.0.0.0/16 --iprange=10.0.0.0/24 my-net'
   # Run container in detached state.
   - 'sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"'
 
