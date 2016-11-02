@@ -23,7 +23,11 @@
 #  command: 'conda create -y -q --json -n {{ conda_env_name }} --clone {{ conda_env_base }}'
 #  when: "(anaconda_install_dir ~ '/envs/' ~ conda_env_name) not in conda_envs_present and conda_env_base is defined"
 
-
+- name: Ensure UTF-8 locale is enabled
+  lineinfile: dest=/etc/environment line={{ item }}
+  with_items:
+    - "LC_ALL=en_US.UTF-8"
+    - "LC_CTYPE=en_US.UTF-8"
 
 - name: Define Outputs
   set_fact:
