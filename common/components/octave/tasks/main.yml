@@ -1,0 +1,20 @@
+---
+- name: Check parameters
+  assert:
+    that:
+      - anaconda_install_dir is defined
+
+- name: Install epel
+  yum: name=epel-release state=present
+
+- name: Install octave
+  yum: name=octave state=present
+
+- name: Install octave_kernel for jupyter
+  pip:
+    name: octave_kernel
+    executable: "{{ anaconda_install_dir }}/bin/pip"
+    state: present
+
+- name: Configure octave_kernel
+  shell: "{{ anaconda_install_dir }}/bin/python3 -m octave_kernel.install"

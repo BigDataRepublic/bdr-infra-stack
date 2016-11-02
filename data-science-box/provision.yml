@@ -11,3 +11,4 @@
     - { role: spark_client_kernel, spark_client_version: "1.6.2-hadoop-2.6", spark_client_home: "{{ spark_client.output.home }}", conda_env_name: '{{ conda_env.output.name }}'}
     - { role: spark_client, spark_client_version: "2.0.0-hadoop-2.7", spark_client_url: "http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.7.tgz"}
     - { role: spark_client_kernel, spark_client_version: "2.0.0-hadoop-2.7", spark_client_home: "{{ spark_client.output.home }}", conda_env_name: '{{ conda_env.output.name }}'}
+    - octave
