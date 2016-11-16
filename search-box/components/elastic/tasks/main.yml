@@ -36,10 +36,10 @@
 #  when: es_uid
 #  tags: [elasticsearch]
 
-#- name: set elasticsearch configuration
-#  template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch mode=0644 owner=root group=root
-#  notify: restart elasticsearch
-#  tags: [elasticsearch]
+- name: set elasticsearch configuration
+  template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml mode=0644 owner=root group=root
+  notify: restart elasticsearch
+  tags: [elasticsearch]
 
 # set limits.conf
 - name: limits.conf tuning

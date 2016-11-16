@@ -16,3 +16,4 @@ es_start_options:
 
 # Configuration file
 es_config_file:
+    network.host: 0.0.0.0
