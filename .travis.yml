@@ -37,8 +37,7 @@ script:
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro
   ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"
-- sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "yum
-  update -y && yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
+- sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
   selinux-policy libselinux-utils"
 - sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd
   /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory}
