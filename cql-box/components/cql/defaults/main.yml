@@ -1,0 +1,4 @@
+---
+cql_version: 3.0.0
+cql_nodecount: 3
+cql_clustername: test

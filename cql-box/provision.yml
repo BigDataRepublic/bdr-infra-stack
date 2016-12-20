@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - repositories
+  tasks:
+    - package: name=python-pip state=present
+    - package: name=git state=present
+
+- hosts: cql
+  roles:
+    - cql
