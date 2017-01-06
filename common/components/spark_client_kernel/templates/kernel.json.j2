@@ -13,6 +13,6 @@
     "PYSPARK_PYTHON": "{{ anaconda_install_dir }}/envs/{{ conda_env_name }}/bin/python",
     "PYTHONPATH": "{{ spark_client_home }}/python/:{{ tmp_py4j_path }}",
     "PYTHONSTARTUP": "{{ spark_client_home }}/python/pyspark/shell.py",
-    "PYSPARK_SUBMIT_ARGS": "--master local[*] pyspark-shell --packages com.databricks:spark-csv_2.11:{{ spark_client_version.split('-')[0] }}"
+    "PYSPARK_SUBMIT_ARGS": "--master local[*] --packages com.databricks:csv_2.11:1.5.1,com.databricks:xml_2.11:0.4.1,com.databricks:avro_2.11:3.1.0 pyspark-shell"
   }
 }
