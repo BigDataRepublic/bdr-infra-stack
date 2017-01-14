@@ -1,0 +1,4 @@
+---
+repositories:
+  docker:
+    local: components/docker/files/docker.repo

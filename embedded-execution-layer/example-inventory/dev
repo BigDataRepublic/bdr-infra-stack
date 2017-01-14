@@ -1,0 +1,7 @@
+[bdr-embedded-execution-layer]
+bdr-container-node-1 ansible_connection=local
+bdr-container-node-2 ansible_connection=local
+bdr-container-node-3 ansible_connection=local
+
+
+

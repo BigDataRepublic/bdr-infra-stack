@@ -1,0 +1,7 @@
+---
+- hosts: bdr-embedded-execution-layer
+  become: yes
+  roles:
+    - repositories
+    - monitoring
+    - docker
