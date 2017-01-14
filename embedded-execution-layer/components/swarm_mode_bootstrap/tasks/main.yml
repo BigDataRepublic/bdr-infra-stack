@@ -1,0 +1,31 @@
+---
+
+- name: Check swarm existence
+  command: docker swarm join-token worker -q
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+
+- set_fact:
+    tmp_swarm_exists: "{{ tmp_command_result.stderr == ''}}"
+
+- debug:
+    var: tmp_command_result
+
+- name: Initialize swarm
+  command: "docker swarm init --advertise-addr {{ advertised_host }}"
+  when: not tmp_swarm_exists
+
+- name: Request manager join token
+  command: docker swarm join-token manager -q
+  when: tmp_swarm_exists
+  register: tmp_command_result2
+  failed_when: "'Usage' in tmp_command_result2.stderr"
+
+- name: Define Outputs
+  set_fact:
+    swarm_mode_bootstrap: "{{ {'output': {'worker_token': tmp_command_result.stdout, 'manager_token': tmp_command_result2.stdout }} }}"
+
+- debug:
+    var: swarm_mode_bootstrap
+

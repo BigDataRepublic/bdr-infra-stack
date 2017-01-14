@@ -1,0 +1,23 @@
+---
+
+- name: Check parameters
+  assert:
+    that:
+      - token is defined
+      - initial_leader_ip is defined
+
+- name: Check swarm existence
+  command: docker node ls
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_swarm_exists: "{{ tmp_command_result.stderr == '' or 'Worker nodes' in tmp_command_result.stderr }}"
+
+- name: Join swarm
+  command: "docker swarm join --token {{ token }} {{ initial_leader_ip }}:2377"
+  register: tmp_command_result
+  when: not tmp_swarm_exists
+
+- debug:
+    var: tmp_command_result

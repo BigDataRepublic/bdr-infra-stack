@@ -1,7 +1,18 @@
 ---
-- hosts: bdr-embedded-execution-layer
+- hosts: container-nodes
   become: yes
   roles:
     - repositories
     - monitoring
     - docker
+
+- hosts: initial-swarm-leader-manager
+  become: yes
+  roles:
+    - swarm_mode_bootstrap
+
+- hosts: initial-swarm-backup-managers
+  become: yes
+  roles:
+    - { role: swarm_mode_join, token: "{{ hostvars['bdr-container-node-1'].swarm_mode_bootstrap.output.manager_token }}", initial_leader_ip: "{{ hostvars['bdr-container-node-1'].advertised_host }}"}
+
