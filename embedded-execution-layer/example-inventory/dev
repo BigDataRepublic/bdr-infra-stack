@@ -1,4 +1,4 @@
-bdr-container-node-1 ansible_connection=local advertised_host=10.0.0.45 docker_remote_access=False
+bdr-container-node-1 ansible_connection=local advertised_host=10.0.0.45
 bdr-container-node-2 ansible_host=10.0.0.46 ansible_ssh_host=10.0.0.46
 bdr-container-node-3 ansible_host=10.0.0.47 ansible_ssh_host=10.0.0.47
 
