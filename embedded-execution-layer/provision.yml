@@ -4,15 +4,30 @@
   roles:
     - repositories
     - monitoring
-    - docker
 
 - hosts: initial-swarm-leader-manager
   become: yes
   roles:
+    - { role: cert,
+        cert_output_dir: /opt/ssl,
+        cert_country: NL,
+        cert_state: Utrecht,
+        cert_location: Nieuwegein,
+        cert_organisation: BigData Republic,
+        cert_organisational_unit: BDR,
+        cert_common_name: "{{ ansible_nodename }}",
+        cert_ip: "{{ advertised_host }}",
+        cert_days_valid: 365
+      }
+    - { role: docker,
+        docker_remote_access: True,
+        docker_remote_access_certs_location: /opt/ssl
+      }
     - swarm_mode_bootstrap
 
 - hosts: initial-swarm-backup-managers
   become: yes
   roles:
+    - docker
     - { role: swarm_mode_join, token: "{{ hostvars['bdr-container-node-1'].swarm_mode_bootstrap.output.manager_token }}", initial_leader_ip: "{{ hostvars['bdr-container-node-1'].advertised_host }}"}
 
