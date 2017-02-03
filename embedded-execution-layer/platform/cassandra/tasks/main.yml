@@ -1,0 +1,80 @@
+---
+
+# We use the external docker API made available to us to provision this
+- name: Check parameters
+  assert:
+    that:
+      - docker_client_cert is defined
+      - docker_client_key is defined
+      - docker_client_cacert is defined
+      - docker_endpoint is defined
+      - cassandra_nodes is defined
+      - cassandra_data_dir is defined
+
+- set_fact:
+    docker_cmd: docker --tlsverify --tlscacert={{ docker_client_cacert }} --tlscert={{ docker_client_cert }} --tlskey={{ docker_client_key }} -H {{ docker_endpoint }}
+
+- name: Check for Cassandra Network
+  command: |
+    {{ docker_cmd }}
+    network inspect cassandra
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_network_exists: "{{ tmp_command_result.stderr == ''}}"
+
+
+- name: Deploy Cassandra Network
+  command: |
+    {{ docker_cmd }}
+    network create --driver overlay --opt encrypted --subnet {{ docker_overlay_subnet }} cassandra
+  when: not tmp_network_exists
+
+- name: Check for Cassandra Service
+  command: |
+    {{ docker_cmd }}
+    service inspect cassandra
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
+
+- name: Set Cassandra Node Labels
+  command: |
+    {{ docker_cmd }}
+    node update --label-add cassandra=true {{item}}
+  with_items: "{{ cassandra_nodes }}"
+
+- set_fact:
+    cassandra_seed_prefix: "{{ docker_overlay_subnet.split('/')[0][:-1]}}"
+
+- set_fact:
+    cassandra_seeds: "{{ cassandra_seed_prefix | prefix_list(3, (cassandra_nodes | length ) ) | join(',') }}"
+
+- debug:
+    var: cassandra_seeds
+
+# We deploy global (will show 'Allocated' on all nodes, but will only run on nodes with constraint).
+- name: Deploy Cassandra Service
+  command: |
+    {{ docker_cmd }}
+    service create --name cassandra
+    --network cassandra
+    --mode global --constraint '{{ docker_node_constraint }}'
+    --mount src=cassandra-data,dst=/var/lib/cassandra,volume-driver=local
+    --env CASSANDRA_SEEDS={{ cassandra_seeds }}
+    cassandra:{{ cassandra_version }}
+  when: not tmp_service_exists
+
+
+
+
+
+
+
+
+
+
+

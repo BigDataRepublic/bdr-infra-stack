@@ -1,0 +1,4 @@
+---
+docker_node_constraint: "node.labels.cassandra==true"
+cassandra_version: 3.9
+docker_overlay_subnet: 10.0.1.0/24

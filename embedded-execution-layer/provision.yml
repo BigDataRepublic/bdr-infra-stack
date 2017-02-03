@@ -31,3 +31,15 @@
     - docker
     - { role: swarm_mode_join, token: "{{ hostvars['bdr-container-node-1'].swarm_mode_bootstrap.output.manager_token }}", initial_leader_ip: "{{ hostvars['bdr-container-node-1'].advertised_host }}"}
 
+- hosts: initial-swarm-leader-manager
+  become: yes
+  roles:
+    - { role: cassandra,
+        docker_endpoint: "127.0.0.1:2376",
+        docker_client_cert: "/opt/ssl/client.crt",
+        docker_client_cacert: "/opt/ssl/ca.crt",
+        docker_client_key: "/opt/ssl/client.pem",
+        cassandra_nodes: ['bdr-container-node-1', 'bdr-container-node-2', 'bdr-container-node-3'],
+        cassandra_data_dir: "/mnt/data/cassandra"
+      }
+
