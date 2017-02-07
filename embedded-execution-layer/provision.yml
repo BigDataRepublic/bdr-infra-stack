@@ -39,7 +39,6 @@
         docker_client_cert: "/opt/ssl/client.crt",
         docker_client_cacert: "/opt/ssl/ca.crt",
         docker_client_key: "/opt/ssl/client.pem",
-        cassandra_nodes: ['bdr-container-node-1', 'bdr-container-node-2', 'bdr-container-node-3'],
-        cassandra_data_dir: "/mnt/data/cassandra"
+        cassandra_nodes: ['bdr-container-node-1', 'bdr-container-node-2', 'bdr-container-node-3']
       }
 
