@@ -55,12 +55,12 @@ script:
 - IFS=','
 - echo $NODES
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
-- for NODE in $NODES 
+- for NODE in $NODES; 
   do
   sudo docker run --detach --network=my-net --ip=${NODE} --volume="${PWD}":/opt/bdr-infra-stack:ro
-  ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_IDS}/${NODE}"
+  ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_IDS}/${NODE}";
   sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
-  selinux-policy libselinux-utils"
+  selinux-policy libselinux-utils";
   done
 - sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "cd
   /opt/bdr-infra-stack/${MODULE} && ansible-playbook ${PLAYBOOK} -i ${INVENTORY}
