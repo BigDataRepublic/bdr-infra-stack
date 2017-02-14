@@ -24,15 +24,21 @@ services:
 
 script:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then COMMIT_RANGE=$TRAVIS_COMMIT_RANGE; else COMMIT_RANGE="HEAD~..HEAD"; fi;
-- CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
-- echo $COMMIT_RANGE
-- echo $CHANGED_FILES
+
+# Prerequisites and some more info.
+- IFS=',' &&  
+  CONTAINER_IDS=$(mktemp -d) &&
+  CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
+  echo $COMMIT_RANGE &&
+  echo $CHANGED_FILES &&
+  echo $NODES
+
 - if [[ "$CHANGED_FILES" != *"$MODULE"* ]] && [[ "$CHANGED_FILES" != *"common"* ]]; then echo "No changes in $MODULE or common, shortcircuiting build." && exit 0; fi;
-- CONTAINER_IDS=$(mktemp -d)
-- IFS=','
-- echo $NODES
+
 - sudo docker pull geerlingguy/docker-${DISTRO}-ansible:latest
+
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
+
 - for NODE in $NODES; 
   do
   echo "Preparing node ${NODE}" &&
