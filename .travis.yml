@@ -1,12 +1,14 @@
 sudo: required
 env:
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: data-science-box
-  IP: 10.0.0.42
+  global:
+  - DISTRO: centos7
+    INIT: /usr/lib/systemd/systemd
+    RUN_OPTS: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+    INVENTORY: example-inventory/dev
+    PLAYBOOK: provision.yml  
+  matrix:
+    MODULE: data-science-box
+    NODES: 10.0.0.42,10.0.0.43
 #- distro: centos7
 #  init: /usr/lib/systemd/systemd
 #  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -47,21 +49,24 @@ script:
 - case "$CHANGED_FILES" in
     *common* ) echo "should run everything";;
     *data-science-box* ) echo "only run data science box";;
-    * ) echo "Error..." && exit 1;;
+    * ) echo "Error...";;
   esac
-- container_id=$(mktemp)
+- CONTAINER_ID=$(mktemp)
+
+- NODES=$(IFS=',' read -r -a array <<< "$NODES")
+- echo $NODES
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro
-  ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${init}" > "${container_id}"
-- sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
+  ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${INIT}" > "${CONTAINER_ID}"
+- sudo docker exec --tty "$(cat ${CONTAINER_ID})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
   selinux-policy libselinux-utils"
-- sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd
-  /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory}
+- sudo docker exec --tty "$(cat ${CONTAINER_ID})" env TERM=xterm /bin/bash -c "cd
+  /opt/bdr-infra-stack/${MODULE} && ansible-playbook ${PLAYBOOK} -i ${INVENTORY}
   --syntax-check"
-- sudo docker exec --tty "$(cat ${container_id})" env TERM=xterm /bin/bash -c "cd
-  /opt/bdr-infra-stack/${working_dir} && ansible-playbook ${playbook} -i ${inventory}"
+- sudo docker exec --tty "$(cat ${CONTAINER_ID})" env TERM=xterm /bin/bash -c "cd
+  /opt/bdr-infra-stack/${MODULE} && ansible-playbook ${PLAYBOOK} -i ${INVENTORY}"
 after_success:
-- sudo docker stop "$(cat ${container_id})"
+- sudo docker stop "$(cat ${CONTAINER_ID})"
 notifications:
   slack:
     secure: G3rBT3RFoSsDotRVayUH5D1q449ImstYuys1Ho1wpswP33FY5usOu8Qv3+CFG/GThFIUuROJ4dSkuembzBSG1aBsd4G3LqG+wu/X4fzMSgiQ0HykiKYPWbm96nq7xmmkB9KiC3dhBBvNYPdn27jY/UEXyETnArd1lnKnj5FXiEhHsTve9xi/7Cjsf9115qZKKcnD1r40+CXgLBMMWTbe99xas/N9+p56r6mGMdDhr2cagV6Y+chBi5UtQj7WOgN8bXVyXHp+mSiPsW7p/9CfLRFCHZgPICp9SQ2JcF+gK3qpFtEDy407xsh8ErzX1DqZC9stHL+glIPa+Dwq306k7P9YOXeN5QqVGDQk5HoWwndV0Jiyh1XWGPFQKle8ozFiEPG20366WSt2d8D7UkLgkg8wPh5DdbBv4HD46d4/nDJqa+vbYnPVBU3faf/ZOUSJwQAsez8IfVOI3/dsbmsG2tFsc7EFJsw7DBwLI4xiquEhngOs/H+napM/MmgPRm6xn4AHmEmKfmGQcnJvYNnNtnQwxestRF6x8pw6zq7TF0VEAqttAfbn6j+ciMZlonmCDhEUXda7bwYEF8JYSpo0B2zo/n1dXX0YeJwR8XJLu6bUMu60ze+rfl2Ymmh9WDhcNcbMUKtf1GEqUMbe0gVvJx1RB1Q6XnBNY897mn6i0As=
