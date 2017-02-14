@@ -40,7 +40,7 @@ env:
 services:
 - docker
 before_install:
-- sudo docker pull geerlingguy/docker-${distro}-ansible:latest
+- sudo docker pull geerlingguy/docker-${DISTRO}-ansible:latest
 script:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then COMMIT_RANGE=$TRAVIS_COMMIT_RANGE; else COMMIT_RANGE="HEAD~..HEAD"; fi;
 - CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
@@ -57,7 +57,7 @@ script:
 - echo $NODES
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro
-  ${run_opts} geerlingguy/docker-${distro}-ansible:latest "${INIT}" > "${CONTAINER_ID}"
+  ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_ID}"
 - sudo docker exec --tty "$(cat ${CONTAINER_ID})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
   selinux-policy libselinux-utils"
 - sudo docker exec --tty "$(cat ${CONTAINER_ID})" env TERM=xterm /bin/bash -c "cd
