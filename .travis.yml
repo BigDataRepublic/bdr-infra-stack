@@ -44,6 +44,11 @@ script:
 - CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
 - echo $COMMIT_RANGE
 - echo $CHANGED_FILES
+- case "$CHANGED_FILES" in
+    *common* ) echo "should run everything";;
+    *data-science-box* ) echo "only run data science box";;
+    * ) echo "Error..." && exit 1;;
+  esac
 - container_id=$(mktemp)
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro
