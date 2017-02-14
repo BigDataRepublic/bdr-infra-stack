@@ -57,8 +57,9 @@ script:
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - for NODE in $NODES; 
   do
+  echo "Preparing node ${NODE}" &&
   sudo docker run --detach --network=my-net --ip=${NODE} --volume="${PWD}":/opt/bdr-infra-stack:ro
-  ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_IDS}/${NODE}";
+  ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_IDS}/${NODE}" &&
   sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
   selinux-policy libselinux-utils";
   done
