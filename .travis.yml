@@ -7,36 +7,18 @@ env:
     INVENTORY: example-inventory/dev
     PLAYBOOK: provision.yml  
   matrix:
-    MODULE: data-science-box
-    NODES: 10.0.0.42,10.0.0.43
-#- distro: centos7
-#  init: /usr/lib/systemd/systemd
-#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-#  playbook: provision.yml
-#  inventory: example-inventory/dev
-#  working_dir: data-science-hub
-#  IP: 10.0.0.43
-#- distro: centos7
-#  init: /usr/lib/systemd/systemd
-#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-#  playbook: dev-cluster.yml
-#  inventory: example-inventory/dev
-#  working_dir: data-science-cluster
-#  IP: 10.0.0.44
-#- distro: centos7
-#  init: /usr/lib/systemd/systemd
-#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-#  playbook: provision.yml
-#  inventory: example-inventory/dev
-#  working_dir: search-box
-#  IP: 10.0.0.21
-#- distro: centos7
-#  init: /usr/lib/systemd/systemd
-#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-#  playbook: provision.yml
-#  inventory: example-inventory/dev
-#  working_dir: cql-box
-#  IP: 10.0.0.45
+    - MODULE: data-science-box
+      NODES: 10.0.0.42
+    - MODULE: data-science-hub
+      NODES: 10.0.0.43
+    - MODULE: data-science-cluster
+      NODES: 10.0.0.44
+      PLAYBOOK: dev-cluster.yml
+    - MODULE: search-box
+      NODES: 10.0.0.21
+    - MODULE: cql-box
+      NODES: 10.0.0.22
+
 services:
 - docker
 before_install:
@@ -46,11 +28,7 @@ script:
 - CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
 - echo $COMMIT_RANGE
 - echo $CHANGED_FILES
-- case "$CHANGED_FILES" in
-    *common* ) echo "should run everything";;
-    *data-science-box* ) echo "only run data science box";;
-    * ) echo "Error...";;
-  esac
+- if [[ "$CHANGED_FILES" != *"$MODULE"* ]] && [[ "$CHANGED_FILES" != *"common"* ]]; then echo "No changes in $MODULE or common, shortcircuiting build." && exit 0; fi;
 - CONTAINER_IDS=$(mktemp -d)
 - IFS=','
 - echo $NODES
@@ -63,6 +41,8 @@ script:
   sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
   selinux-policy libselinux-utils";
   done
+  
+# Run the playbook on the last docker container created.
 - sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "cd
   /opt/bdr-infra-stack/${MODULE} && ansible-playbook ${PLAYBOOK} -i ${INVENTORY}
   --syntax-check"
