@@ -7,34 +7,34 @@ env:
   inventory: example-inventory/dev
   working_dir: data-science-box
   IP: 10.0.0.42
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: data-science-hub
-  IP: 10.0.0.43
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: dev-cluster.yml
-  inventory: example-inventory/dev
-  working_dir: data-science-cluster
-  IP: 10.0.0.44
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: search-box
-  IP: 10.0.0.21
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: cql-box
-  IP: 10.0.0.45
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: provision.yml
+#  inventory: example-inventory/dev
+#  working_dir: data-science-hub
+#  IP: 10.0.0.43
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: dev-cluster.yml
+#  inventory: example-inventory/dev
+#  working_dir: data-science-cluster
+#  IP: 10.0.0.44
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: provision.yml
+#  inventory: example-inventory/dev
+#  working_dir: search-box
+#  IP: 10.0.0.21
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: provision.yml
+#  inventory: example-inventory/dev
+#  working_dir: cql-box
+#  IP: 10.0.0.45
 services:
 - docker
 before_install:
