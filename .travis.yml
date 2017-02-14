@@ -7,39 +7,43 @@ env:
   inventory: example-inventory/dev
   working_dir: data-science-box
   IP: 10.0.0.42
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: data-science-hub
-  IP: 10.0.0.43
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: dev-cluster.yml
-  inventory: example-inventory/dev
-  working_dir: data-science-cluster
-  IP: 10.0.0.44
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: search-box
-  IP: 10.0.0.21
-- distro: centos7
-  init: /usr/lib/systemd/systemd
-  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
-  playbook: provision.yml
-  inventory: example-inventory/dev
-  working_dir: cql-box
-  IP: 10.0.0.45
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: provision.yml
+#  inventory: example-inventory/dev
+#  working_dir: data-science-hub
+#  IP: 10.0.0.43
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: dev-cluster.yml
+#  inventory: example-inventory/dev
+#  working_dir: data-science-cluster
+#  IP: 10.0.0.44
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: provision.yml
+#  inventory: example-inventory/dev
+#  working_dir: search-box
+#  IP: 10.0.0.21
+#- distro: centos7
+#  init: /usr/lib/systemd/systemd
+#  run_opts: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+#  playbook: provision.yml
+#  inventory: example-inventory/dev
+#  working_dir: cql-box
+#  IP: 10.0.0.45
 services:
 - docker
 before_install:
 - sudo docker pull geerlingguy/docker-${distro}-ansible:latest
 script:
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then COMMIT_RANGE=$TRAVIS_COMMIT_RANGE; else COMMIT_RANGE="HEAD~..HEAD"; fi;
+- CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
+- echo $COMMIT_RANGE
+- echo $CHANGED_FILES
 - container_id=$(mktemp)
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro
