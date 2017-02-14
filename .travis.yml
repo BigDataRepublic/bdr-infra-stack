@@ -26,10 +26,8 @@ script:
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then COMMIT_RANGE=$TRAVIS_COMMIT_RANGE; else COMMIT_RANGE="HEAD~..HEAD"; fi;
 
 # Prerequisites and some more info.
-- IFS=',' &&  
-  CONTAINER_IDS=$(mktemp -d) &&
-  CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
-  echo $COMMIT_RANGE &&
+- CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
+- echo $COMMIT_RANGE &&
   echo $CHANGED_FILES &&
   echo $NODES
 
@@ -39,6 +37,8 @@ script:
 
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 
+- IFS=','
+- CONTAINER_IDS=$(mktemp -d)
 - for NODE in $NODES; 
   do
   echo "Preparing node ${NODE}" &&
