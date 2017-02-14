@@ -40,6 +40,10 @@ services:
 before_install:
 - sudo docker pull geerlingguy/docker-${distro}-ansible:latest
 script:
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then COMMIT_RANGE=$TRAVIS_COMMIT_RANGE; else COMMIT_RANGE="HEAD~..HEAD"; fi;
+- CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
+- echo $COMMIT_RANGE
+- echo $CHANGED_FILES
 - container_id=$(mktemp)
 - docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
 - sudo docker run --detach --network=my-net --ip=${IP} --volume="${PWD}":/opt/bdr-infra-stack:ro
