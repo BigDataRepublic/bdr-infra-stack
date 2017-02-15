@@ -1,0 +1,42 @@
+---
+
+- name: Check remote access certificates location
+  assert:
+    that:
+      - docker_remote_access_certs_location is defined
+  when: docker_remote_access
+
+- name: Install docker-engine
+  package: name=docker-engine state=present
+
+- name: Enable docker service
+  systemd: state=started name=docker enabled=yes
+
+
+
+
+
+- name: Ensure docker daemon is running in secure remote access mode
+  lineinfile:
+    dest: /usr/lib/systemd/system/docker.service
+    regexp: "ExecStart"
+    line: "ExecStart=/usr/bin/dockerd --tlsverify --tlscacert={{ docker_remote_access_certs_location }}/ca.crt --tlscert={{ docker_remote_access_certs_location }}/server.crt --tlskey={{ docker_remote_access_certs_location }}/server.pem -H=0.0.0.0:2376 -H unix:///var/run/docker.sock"
+    state: present
+  notify:
+    - daemon_reload
+    - restart_docker
+  when: docker_remote_access
+
+- name: Ensure docker daemon is running in local mode
+  lineinfile:
+    dest: /usr/lib/systemd/system/docker.service
+    regexp: "ExecStart"
+    line: "ExecStart=/usr/bin/dockerd"
+    state: present
+  notify:
+    - daemon_reload
+    - restart_docker
+  when: not docker_remote_access
+
+
+- meta: flush_handlers

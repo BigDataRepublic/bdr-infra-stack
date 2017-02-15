@@ -18,6 +18,9 @@ env:
       NODES: 10.0.0.21
     - MODULE: cql-box
       NODES: 10.0.0.22
+    - MODULE: embedded-execution-layer
+      NODES: 10.0.0.45
+      INVENTORY: example-inventory/single-node
 
 services:
 - docker
@@ -45,7 +48,7 @@ script:
   sudo docker run --detach --network=my-net --ip=${NODE} --volume="${PWD}":/opt/bdr-infra-stack:ro
   ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_IDS}/${NODE}" &&
   sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
-  selinux-policy libselinux-utils";
+  selinux-policy libselinux-utils openssl";
   done
   
 # Run the playbook on the last docker container created.

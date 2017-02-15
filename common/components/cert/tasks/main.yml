@@ -1,0 +1,119 @@
+---
+
+- name: Check parameters
+  assert:
+    that:
+      - cert_country is defined
+      - cert_state is defined
+      - cert_location is defined
+      - cert_organisation is defined
+      - cert_organisational_unit is defined
+      - cert_common_name is defined
+      - cert_ip is defined
+      - cert_days_valid is defined
+      - cert_output_dir is defined
+
+
+
+- set_fact:
+    cert_subject: "/C={{ cert_country }}/ST={{ cert_state }}/L={{ cert_location }}/O={{ cert_organisation }}/OU={{ cert_organisational_unit }}/CN={{ cert_common_name }}"
+
+
+- name: Ensure target dir exists
+  file: path={{ cert_output_dir }} state=directory
+
+- name: Check if CA cert exists
+  stat:
+    path: "{{ cert_output_dir }}/ca.crt"
+  register: ca
+
+- name: Check if server cert exists
+  stat:
+    path: "{{ cert_output_dir }}/server.crt"
+  register: server
+
+- name: Check if client cert exists
+  stat:
+    path: "{{ cert_output_dir }}/client.crt"
+  register: client
+
+
+
+- name: Generate CA key
+  command: |
+    openssl req -new -newkey rsa:4096 -nodes
+      -keyout {{ cert_output_dir }}/ca.pem -days {{ cert_days_valid }} -sha256 -subj '{{ cert_subject }}'
+  when: cert_regenerate or not ca.stat.exists
+
+- name: Generate CA certificate
+  command: |
+    openssl req -new -x509 -days {{ cert_days_valid }}
+      -key {{ cert_output_dir }}/ca.pem -sha256 -out {{ cert_output_dir}}/ca.crt -subj '{{ cert_subject }}'
+  when: cert_regenerate or not ca.stat.exists
+
+- name: Set server certificate extension options
+  lineinfile:
+    dest: "{{ cert_output_dir }}/extfile-server.cnf"
+    regexp: "subjectAltName"
+    line: "subjectAltName = DNS:{{ cert_common_name }},IP:{{ cert_ip }},IP:127.0.0.1"
+    create: yes
+    state: present
+  when: cert_regenerate or not server.stat.exists
+
+- name: Generate server key and certificate signing request
+  command: |
+    openssl req -new -newkey rsa:4096 -nodes -keyout {{ cert_output_dir }}/server.pem
+      -days {{ cert_days_valid }} -sha256 -out {{ cert_output_dir}}/server.csr -subj '{{ cert_subject }}'
+  when: cert_regenerate or not server.stat.exists
+
+- name: Sign server key with CA key
+  command: |
+    openssl x509 -req -days {{ cert_days_valid }} -sha256 -in {{ cert_output_dir }}/server.csr
+      -CA {{ cert_output_dir }}/ca.crt -CAkey {{ cert_output_dir }}/ca.pem -CAcreateserial
+      -out {{ cert_output_dir }}/server.crt -extfile {{ cert_output_dir }}/extfile-server.cnf
+  when: cert_regenerate or not server.stat.exists
+
+- name: Set client certificate extension options
+  lineinfile:
+    dest: "{{ cert_output_dir }}/extfile-client.cnf"
+    regexp: "extendedKeyUsage"
+    line: "extendedKeyUsage = clientAuth"
+    create: yes
+    state: present
+  when: cert_regenerate or not client.stat.exists
+
+- name: Generate client key and certificate signing request
+  command: |
+    openssl req -new -newkey rsa:4096 -nodes -keyout {{ cert_output_dir }}/client.pem
+      -days {{ cert_days_valid }} -sha256 -out {{ cert_output_dir}}/client.csr -subj '{{ cert_subject }}'
+  when: cert_regenerate or not client.stat.exists
+
+- name: Sign client key with CA key
+  command: |
+    openssl x509 -req -days {{ cert_days_valid }} -sha256 -in {{ cert_output_dir }}/client.csr
+      -CA {{ cert_output_dir }}/ca.crt -CAkey {{ cert_output_dir }}/ca.pem -CAcreateserial
+      -out {{ cert_output_dir }}/client.crt -extfile {{ cert_output_dir }}/extfile-client.cnf
+  when: cert_regenerate or not client.stat.exists
+
+- name: Make sure the output dir is only readable by the user who generated the certs
+  file:
+    path: "{{ cert_output_dir }}"
+    mode: 0400
+    recurse: yes
+
+# Based upon these working commands:
+
+# CA
+#openssl req -new -newkey rsa:4096 -nodes -keyout /opt/test/ca.pem -days 365 -sha256 -subj '/C=NL/ST=Utrecht/L=Nieuwegein/O=BigData Republic/OU=BDR/CN=bdr-container-node-1'
+#openssl req -new -x509 -days 365 -key /opt/test/ca.pem -sha256 -out /opt/test/ca.crt -subj '/C=NL/ST=Utrecht/L=Nieuwegein/O=BigData Republic/OU=BDR/CN=bdr-container-node-1'
+
+# Server
+#openssl req -new -newkey rsa:4096 -nodes -keyout server.pem -days 365 -sha256 -out server.csr -subj '/C=NL/ST=Utrecht/L=Nieuwegein/O=BigData Republic/OU=BDR/CN=bdr-container-node-1'
+#echo subjectAltName = DNS:bdr-container-node-1,IP:10.0.0.45,IP:127.0.0.1 > extfile.cnf
+#openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.crt -CAkey ca.pem -CAcreateserial -out server.crt -extfile extfile.cnf
+
+
+# Client
+#openssl req -new -newkey rsa:4096 -nodes -keyout client.pem -days 365 -sha256 -out client.csr -subj '/C=NL/ST=Utrecht/L=Nieuwegein/O=BigData Republic/OU=BDR/CN=bdr-container-node-1'
+#echo extendedKeyUsage = clientAuth > extfile.cnf
+#openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.crt -CAkey ca.pem -CAcreateserial -out client.crt -extfile extfile.cnf
