@@ -1,0 +1,12 @@
+bdr-container-node-1 ansible_connection=local advertised_host=10.0.0.45
+
+[container-nodes]
+bdr-container-node-1
+
+[initial-swarm-leader-manager]
+bdr-container-node-1
+
+[initial-swarm-backup-managers]
+bdr-container-node-1
+
+

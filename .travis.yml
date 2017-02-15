@@ -18,6 +18,9 @@ env:
       NODES: 10.0.0.21
     - MODULE: cql-box
       NODES: 10.0.0.22
+    - MODULE: embedded-execution-layer
+      NODES: 10.0.0.45
+      INVENTORY: example-inventory/single-node
 
 services:
 - docker
