@@ -3,7 +3,7 @@
 - hosts: initial-swarm-leader-manager
   become: yes
   roles:
-    - { role: gateway,
+    - { role: flow_proxy,
         docker_endpoint: "127.0.0.1:2376",
         docker_client_cert: "/opt/ssl/client.crt",
         docker_client_cacert: "/opt/ssl/ca.crt",

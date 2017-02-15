@@ -12,10 +12,10 @@
 - set_fact:
     docker_cmd: docker --tlsverify --tlscacert={{ docker_client_cacert }} --tlscert={{ docker_client_cert }} --tlskey={{ docker_client_key }} -H {{ docker_endpoint }}
 
-- name: Check for Gateway Network
+- name: Check for Proxy Network
   command: |
     {{ docker_cmd }}
-    network inspect gateway
+    network inspect proxy
   register: tmp_command_result
   failed_when: "'Usage' in tmp_command_result.stderr"
 
@@ -23,10 +23,10 @@
     tmp_network_exists: "{{ tmp_command_result.stderr == ''}}"
 
 
-- name: Deploy Gateway Network
+- name: Deploy Proxy Network
   command: |
     {{ docker_cmd }}
-    network create --driver overlay gateway
+    network create --driver overlay --opt encrypted --subnet {{ flow_proxy_overlay_subnet }} proxy
   when: not tmp_network_exists
 
 
@@ -44,32 +44,32 @@
   command: |
     {{ docker_cmd }}
     service create --name swarm-listener
-    --network gateway
-    --constraint 'node.role==manager'
+    --network proxy
     --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
-    -e DF_NOTIFY_CREATE_SERVICE_URL=http://gateway:8080/v1/docker-flow-proxy/reconfigure
-    -e DF_NOTIFY_REMOVE_SERVICE_URL=http://gateway:8080/v1/docker-flow-proxy/remove
+    -e DF_NOTIFY_CREATE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/reconfigure
+    -e DF_NOTIFY_REMOVE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/remove
+    --constraint 'node.role==manager'
     vfarcic/docker-flow-swarm-listener
   when: not tmp_service_exists
 
-- name: Check for Gateway Service
+- name: Check for Flow Proxy Service
   command: |
     {{ docker_cmd }}
-    service inspect gateway
+    service inspect proxy
   register: tmp_command_result
   failed_when: "'Usage' in tmp_command_result.stderr"
 
 - set_fact:
     tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
 
-- name: Deploy Gateway Service
+- name: Deploy Flow Proxy Service
   command: |
     {{ docker_cmd }}
-    service create --name gateway
+    service create --name proxy
     --mode global
-    --network gateway
     -p 80:80
     -p 443:443
+    --network proxy
     -e MODE=swarm
     -e LISTENER_ADDRESS=swarm-listener
     vfarcic/docker-flow-proxy
