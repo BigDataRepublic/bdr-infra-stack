@@ -1,0 +1,48 @@
+---
+
+# We use the external docker API made available to us to provision this
+- name: Check parameters
+  assert:
+    that:
+      - docker_client_cert is defined
+      - docker_client_key is defined
+      - docker_client_cacert is defined
+      - docker_endpoint is defined
+      - docker_opts is defined and '--insecure-registry' in docker_opts
+
+- set_fact:
+    docker_cmd: docker --tlsverify --tlscacert={{ docker_client_cacert }} --tlscert={{ docker_client_cert }} --tlskey={{ docker_client_key }} -H {{ docker_endpoint }}
+
+- name: Check for Registry
+  command: |
+    {{ docker_cmd }}
+    inspect registry
+  register: tmp_command_result
+  failed_when: "'--help' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
+
+
+- name: Deploy Registry
+  command: |
+    {{ docker_cmd }}
+    run
+    --name registry
+    --restart=always
+    --volume /opt/registry:/var/lib/registry
+    -d
+    -p 4000:5000
+    registry:{{ registry_version }}
+  when: not tmp_service_exists
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,3 @@
+---
+registry_node_constraint: "node.labels.registry==true"
+registry_version: 2

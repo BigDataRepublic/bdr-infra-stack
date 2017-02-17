@@ -7,6 +7,9 @@ bdr-container-node-1
 bdr-container-node-2
 bdr-container-node-3
 
+[container-nodes:vars]
+docker_opts="--insecure-registry 10.0.0.45:4000"
+
 [initial-swarm-leader-manager]
 bdr-container-node-1
 
