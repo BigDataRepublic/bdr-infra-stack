@@ -1,0 +1,80 @@
+---
+
+# We use the external docker API made available to us to provision this
+- name: Check parameters
+  assert:
+    that:
+      - docker_client_cert is defined
+      - docker_client_key is defined
+      - docker_client_cacert is defined
+      - docker_endpoint is defined
+      - service_name is defined
+      - image is defined
+
+- set_fact:
+    docker_cmd: docker --tlsverify --tlscacert={{ docker_client_cacert }} --tlscert={{ docker_client_cert }} --tlskey={{ docker_client_key }} -H {{ docker_endpoint }}
+
+- name: Check for {{ service_name }} Network
+  command: |
+    {{ docker_cmd }}
+    network inspect {{ service_name }}
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_network_exists: "{{ tmp_command_result.stderr == ''}}"
+
+
+- name: Deploy {{ service_name }} Network
+  command: |
+    {{ docker_cmd }}
+    network create --driver overlay --opt encrypted --subnet {{ datascience_api_overlay_subnet }} {{ service_name }}
+  when: not tmp_network_exists
+
+- name: Check for {{ service_name }} Service
+  command: |
+    {{ docker_cmd }}
+    service inspect {{ service_name }}
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
+
+
+- name: Deploy {{ service_name }} Service
+  command: |
+    {{ docker_cmd }}
+    service create --name {{ service_name }}
+    --network {{ service_name }}
+    --network proxy
+    --label com.df.notify=true
+    --label com.df.distribute=true
+    --label com.df.servicePath=/{{ service_name }}
+    --label com.df.port={{ datascience_api_internal_port }}
+    --mode replicated
+    --replicas {{ datascience_api_replication }}
+    {{ image }}:{{ datascience_api_image_version }}
+  when: not tmp_service_exists
+
+- name: Update {{ service_name }} Service
+  command: |
+    {{ docker_cmd }}
+    service update
+    --label-add com.df.notify=true
+    --label-add com.df.distribute=true
+    --label-add com.df.servicePath=/{{ service_name }}
+    --label-add com.df.port={{ datascience_api_internal_port }}
+    --replicas {{ datascience_api_replication }}
+    --image {{ image }}:{{ datascience_api_image_version }}
+    {{ service_name }}
+  when: tmp_service_exists
+
+
+
+
+
+
+
+
+

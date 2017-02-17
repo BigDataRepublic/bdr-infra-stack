@@ -1,4 +1,4 @@
 ---
 cassandra_node_constraint: "node.labels.cassandra==true"
 cassandra_version: 3.9
-cassandra_overlay_subnet: 10.0.2.0/24
+cassandra_overlay_subnet: 10.0.4.0/24

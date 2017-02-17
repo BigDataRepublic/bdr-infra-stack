@@ -1,0 +1,5 @@
+---
+datascience_api_overlay_subnet: 10.0.3.0/24
+datascience_api_replication: 3
+datascience_api_image_version: latest
+datascience_api_internal_port: 5000
