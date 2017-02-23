@@ -7,6 +7,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "bdr-container-node-3", autostart: true do |vm|
       vm.vm.hostname = "bdr-container-node-3"
       vm.vm.network "private_network", ip: "10.0.0.47"
+      vm.vm.synced_folder "../", "/vagrant", type: "virtualbox"
 
       # Provision virtualbox:
       vm.vm.provider "virtualbox" do |vb|
@@ -20,6 +21,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "bdr-container-node-2", autostart: true do |vm|
       vm.vm.hostname = "bdr-container-node-2"
       vm.vm.network "private_network", ip: "10.0.0.46"
+      vm.vm.synced_folder "../", "/vagrant", type: "virtualbox"
 
       # Provision virtualbox:
       vm.vm.provider "virtualbox" do |vb|
