@@ -1,0 +1,14 @@
+---
+
+- hosts: initial-swarm-leader-manager
+  become: yes
+  roles:
+    - { role: postgres,
+        docker_endpoint: "127.0.0.1:2376",
+        docker_client_cert: "/opt/ssl/client.crt",
+        docker_client_cacert: "/opt/ssl/ca.crt",
+        docker_client_key: "/opt/ssl/client.pem",
+        postgres_nodes: ['bdr-container-node-1'],
+        postgres_password: test
+      }
+

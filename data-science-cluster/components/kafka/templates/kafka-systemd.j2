@@ -1,0 +1,17 @@
+[Unit]
+Description=Zookeeper server
+Wants=network.target network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=simple
+User={{ kafka_user }}
+WorkingDirectory={{ kafka_home_dir }}
+#PIDFile=/var/run/kafka/kafka.pid #only when using bin/kafka start, then also need type=forking
+Environment=KAFKA_HOME={{ kafka_home_dir }}
+ExecStart={{ kafka_home_dir }}/bin/kafka-server-start.sh {{ kafka_conf_dir }}/server.properties
+ExecStop={{ kafka_home_dir }}/bin/kafka-server-stop.sh {{ kafka_conf_dir }}/server.properties
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+bdr-cql-box ansible_connection=local advertised_host=10.0.0.45
+
+[bdr-cql-box]
+bdr-cql-box
+
+[cql]
+bdr-cql-box

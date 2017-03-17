@@ -1,0 +1,6 @@
+---
+repositories:
+  docker:
+    local: components/docker/files/docker.repo
+  rpmforge:
+    local: rpmforge.repo

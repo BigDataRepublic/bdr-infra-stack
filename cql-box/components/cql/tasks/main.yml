@@ -1,0 +1,25 @@
+---
+
+- name: Ensure Java 8 is installed
+  package: name=java-1.8.0-openjdk state=present
+  become: yes
+
+- name:  Get latest ccm version
+  become: yes
+  git:
+    repo: https://github.com/pcmanus/ccm.git
+    dest: ~/checkouts/ccm
+    update: no
+
+- name: Install ccm
+  become: yes
+  command: ./setup.py install
+  args:
+    chdir: ~/checkouts/ccm
+    creates: /usr/bin/ccm
+
+- name: Initiate cluster
+  command: "ccm create --version {{cql_version}} --nodes {{cql_nodecount}} --start {{cql_clustername}}"
+  args:
+    creates: "~/.ccm/{{cql_clustername}}"
+

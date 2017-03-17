@@ -1,0 +1,16 @@
+[Unit]
+Description=Zookeeper server
+Wants=network.target network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=forking
+User={{ zookeeper_user }}
+WorkingDirectory={{ zookeeper_home_dir }}
+PIDFile={{ zookeeper_pid_dir }}/zookeeper_server.pid
+ExecStart={{ zookeeper_home_dir }}/bin/zkServer.sh start
+ExecStop={{ zookeeper_home_dir }}/bin/zkServer.sh stop
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

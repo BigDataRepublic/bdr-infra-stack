@@ -1,0 +1,46 @@
+---
+- name: Check parameters
+  assert:
+    that:
+      - spark_master_home is defined
+
+- name: Create working directory on node
+  file:
+    path: "{{ spark_master_working_dir }}"
+    state: directory
+    owner: spark
+    group: spark
+  tags:
+    - spark
+
+- name: Make log directory on node
+  file:
+    path: "{{ spark_master_home }}/logs"
+    state: directory
+    owner: spark
+    group: spark
+  tags:
+    - spark
+
+- name: install master service
+  template: src=spark-master-systemd.j2 dest=/etc/systemd/system/spark-master.service owner=root group=root mode=755
+  tags:
+    - spark
+  register: tmp_service
+
+- name: reload services
+  command: systemctl daemon-reload
+  tags:
+    - spark
+  when: tmp_service.changed
+
+- name: restart master service
+  service: name=spark-master state=restarted
+  tags:
+    - spark
+  when: tmp_service.changed
+
+- name: start master service
+  service: name=spark-master state=started
+  tags:
+    - spark

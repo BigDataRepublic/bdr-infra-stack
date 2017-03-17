@@ -1,0 +1,86 @@
+---
+
+# We use the external docker API made available to us to provision this
+- name: Check parameters
+  assert:
+    that:
+      - docker_client_cert is defined
+      - docker_client_key is defined
+      - docker_client_cacert is defined
+      - docker_endpoint is defined
+
+- set_fact:
+    docker_cmd: docker --tlsverify --tlscacert={{ docker_client_cacert }} --tlscert={{ docker_client_cert }} --tlskey={{ docker_client_key }} -H {{ docker_endpoint }}
+
+- name: Check for Proxy Network
+  command: |
+    {{ docker_cmd }}
+    network inspect proxy
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_network_exists: "{{ tmp_command_result.stderr == ''}}"
+
+
+- name: Deploy Proxy Network
+  command: |
+    {{ docker_cmd }}
+    network create --driver overlay --opt encrypted --subnet {{ flow_proxy_overlay_subnet }} proxy
+  when: not tmp_network_exists
+
+
+- name: Check for Swarm Listener Service
+  command: |
+    {{ docker_cmd }}
+    service inspect swarm-listener
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
+
+- name: Deploy Swarm Listener Service
+  command: |
+    {{ docker_cmd }}
+    service create --name swarm-listener
+    --network proxy
+    --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock"
+    -e DF_NOTIFY_CREATE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/reconfigure
+    -e DF_NOTIFY_REMOVE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/remove
+    --constraint 'node.role==manager'
+    vfarcic/docker-flow-swarm-listener
+  when: not tmp_service_exists
+
+- name: Check for Flow Proxy Service
+  command: |
+    {{ docker_cmd }}
+    service inspect proxy
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
+
+- name: Deploy Flow Proxy Service
+  command: |
+    {{ docker_cmd }}
+    service create --name proxy
+    --mode global
+    -p 80:80
+    -p 443:443
+    --network proxy
+    -e MODE=swarm
+    -e LISTENER_ADDRESS=swarm-listener
+    vfarcic/docker-flow-proxy
+  when: not tmp_service_exists
+
+
+
+
+
+
+
+
+
+

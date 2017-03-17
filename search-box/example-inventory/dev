@@ -1,0 +1,2 @@
+[bdr-elk-security-stack]
+bdr-elk-security-stack ansible_connection=local

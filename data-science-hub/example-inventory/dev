@@ -1,0 +1,5 @@
+[bdr-data-science-hub]
+bdr-data-science-hub ansible_connection=local spark_client_owner=rhea spark_client_group=jupyterhub
+
+
+

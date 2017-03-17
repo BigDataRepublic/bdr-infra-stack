@@ -1,0 +1,51 @@
+---
+
+- name: Check parameters
+  assert:
+    that:
+      - kafka_zookeeper is defined
+      - kafka_id is defined
+
+- name: create group
+  group:
+    name: "{{ kafka_group}}"
+    state: present
+
+- name: create user
+  user:
+    name: "{{ kafka_user }}"
+    group: "{{ kafka_group }}"
+
+- name: Install kafka
+  yum: name="{{item}}" state=present
+  with_items:
+    - "kafka"
+
+- name: Create kafka dirs
+  file: path="{{ item }}" state=directory recurse=yes owner="{{ kafka_user }}" group="{{ kafka_group }}" mode=755
+  with_items:
+    - "{{ kafka_logs }}"
+    - "{{ kafka_pid_dir }}"
+    - "{{ kafka_conf_dir }}"
+    - "{{ kafka_log_dir }}"
+
+- name: Overwrite default kafka config file
+  template: src=server.properties.j2 dest="{{ kafka_conf_dir }}/server.properties" owner="{{ kafka_user }}" group="{{ kafka_group }}" mode=755
+  register: tmp_kafka_props
+
+- name: install kafka service
+  template: src=kafka-systemd.j2 dest=/etc/systemd/system/kafka.service owner=root group=root mode=755
+  register: tmp_kafka_service
+
+- name: reload services
+  command: systemctl daemon-reload
+  when: tmp_kafka_service.changed
+
+- name: restart kafka service if anything changed
+  service: name=kafka state=restarted
+  when: tmp_kafka_service.changed or tmp_kafka_props.changed
+
+- name: start kafka service if nothing changed
+  service: name=kafka state=started
+  when: not(tmp_kafka_service.changed or tmp_kafka_props.changed)
+

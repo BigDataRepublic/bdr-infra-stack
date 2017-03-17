@@ -1,0 +1,70 @@
+---
+
+# We use the external docker API made available to us to provision this
+- name: Check parameters
+  assert:
+    that:
+      - docker_client_cert is defined
+      - docker_client_key is defined
+      - docker_client_cacert is defined
+      - docker_endpoint is defined
+      - postgres_nodes is defined
+
+- set_fact:
+    docker_cmd: docker --tlsverify --tlscacert={{ docker_client_cacert }} --tlscert={{ docker_client_cert }} --tlskey={{ docker_client_key }} -H {{ docker_endpoint }}
+
+- name: Check for Postgres Network
+  command: |
+    {{ docker_cmd }}
+    network inspect postgres
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_network_exists: "{{ tmp_command_result.stderr == ''}}"
+
+
+- name: Deploy Postgres Network
+  command: |
+    {{ docker_cmd }}
+    network create --driver overlay --opt encrypted --subnet {{ postgres_overlay_subnet }} postgres
+  when: not tmp_network_exists
+
+- name: Check for Postgres Service
+  command: |
+    {{ docker_cmd }}
+    service inspect postgres
+  register: tmp_command_result
+  failed_when: "'Usage' in tmp_command_result.stderr"
+
+- set_fact:
+    tmp_service_exists: "{{ tmp_command_result.stderr == ''}}"
+
+- name: Set Postgres Node Labels
+  command: |
+    {{ docker_cmd }}
+    node update --label-add postgres=true {{item}}
+  with_items: "{{ postgres_nodes }}"
+
+# We deploy global (will show 'Allocated' on all nodes, but will only run on nodes with constraint).
+- name: Deploy Postgres Service
+  command: |
+    {{ docker_cmd }}
+    service create --name postgres
+    --network postgres
+    --mode global --constraint '{{ postgres_node_constraint }}'
+    --mount src=postgres-data,dst=/var/lib/postgresql/data,volume-driver=local
+    --env POSTGRES_PASSWORD={{ postgres_password }}
+    postgres:{{ postgres_version }}
+  when: not tmp_service_exists
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,16 @@
+bdr-data-science-cluster ansible_connection=local advertised_host=10.0.0.44
+
+[bdr-data-science-cluster]
+bdr-data-science-cluster
+
+[sparkworkers]
+bdr-data-science-cluster
+
+[sparkmasters]
+bdr-data-science-cluster
+
+[zookeeper]
+bdr-data-science-cluster zookeeper_id=1
+
+[kafka]
+bdr-data-science-cluster kafka_id=0

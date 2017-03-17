@@ -1,0 +1,35 @@
+# required: vagrant plugin install vagrant-vbguest
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.box_version = "<=1608.02"
+  config.ssh.insert_key = false
+  config.vbguest.auto_update = true
+
+  config.vm.provision "shell", inline: "sudo yum update -y && sudo yum install -y kernel-devel"
+  config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "provision.yml"
+    ansible.inventory_path = "example-inventory/dev"
+    ansible.provisioning_path = "/vagrant/cql-box"
+    ansible.raw_arguments = ['-u vagrant']
+  end
+
+  config.vm.synced_folder "..", "/vagrant", type: "virtualbox"
+
+  #config.vm.network :forwarded_port, guest: 22, host: 2223
+
+  config.vm.define "bdr-cql-box", autostart: true do |vm|
+      vm.vm.hostname = "cql-box"
+      vm.vm.network "private_network", ip: "10.0.0.45"
+      # to mount other folders: vm.vm.synced_folder "../../", "/home/vagrant/projects",  :mount_options => ["dmode=644,fmode=644"]
+
+      # Provision virtualbox:
+      vm.vm.provider "virtualbox" do |vb|
+        vb.memory = 5096
+        vb.cpus = 4
+        vb.customize ["modifyvm", :id, "--usb", "off"]
+        vb.customize ["modifyvm", :id, "--usbehci", "off"]
+      end
+  end
+
+
+end

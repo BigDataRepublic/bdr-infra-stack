@@ -1,0 +1,4 @@
+---
+postgres_node_constraint: "node.labels.postgres==true"
+postgres_version: 9.6.1
+postgres_overlay_subnet: 10.0.5.0/24

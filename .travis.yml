@@ -1,0 +1,62 @@
+sudo: required
+env:
+  global:
+  - DISTRO: centos7
+    INIT: /usr/lib/systemd/systemd
+    RUN_OPTS: --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro
+    INVENTORY: example-inventory/dev
+    PLAYBOOK: provision.yml  
+  matrix:
+    - MODULE: data-science-box
+      NODES: 10.0.0.42
+    - MODULE: data-science-hub
+      NODES: 10.0.0.43
+    - MODULE: data-science-cluster
+      NODES: 10.0.0.44
+      PLAYBOOK: dev-cluster.yml
+    - MODULE: search-box
+      NODES: 10.0.0.21
+    - MODULE: cql-box
+      NODES: 10.0.0.22
+    - MODULE: embedded-execution-layer
+      NODES: 10.0.0.45
+      INVENTORY: example-inventory/single-node
+
+services:
+- docker
+
+script:
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then COMMIT_RANGE=$TRAVIS_COMMIT_RANGE; else COMMIT_RANGE="HEAD~..HEAD"; fi;
+
+# Prerequisites and some more info.
+- CHANGED_FILES=`git diff --name-only --diff-filter=ACMRTUXB $COMMIT_RANGE`
+- echo $COMMIT_RANGE &&
+  echo $CHANGED_FILES &&
+  echo $NODES
+
+- if [[ "$CHANGED_FILES" != *"$MODULE"* ]] && [[ "$CHANGED_FILES" != *"common"* ]]; then echo "No changes in $MODULE or common, shortcircuiting build." && exit 0; fi;
+
+- sudo docker pull geerlingguy/docker-${DISTRO}-ansible:latest
+
+- docker network create --driver=bridge --subnet=10.0.0.0/16 my-net
+
+- IFS=','
+- CONTAINER_IDS=$(mktemp -d)
+- for NODE in $NODES; 
+  do
+  echo "Preparing node ${NODE}" &&
+  sudo docker run --detach --network=my-net --ip=${NODE} --volume="${PWD}":/opt/bdr-infra-stack:ro
+  ${RUN_OPTS} geerlingguy/docker-${DISTRO}-ansible:latest "${INIT}" > "${CONTAINER_IDS}/${NODE}" &&
+  sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "yum install -y bzip2 libselinux-python libselinux selinux-policy-targeted
+  selinux-policy libselinux-utils openssl";
+  done
+  
+# Run the playbook on the last docker container created.
+- sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "cd
+  /opt/bdr-infra-stack/${MODULE} && ansible-playbook ${PLAYBOOK} -i ${INVENTORY}
+  --syntax-check"
+- sudo docker exec --tty "$(cat ${CONTAINER_IDS}/${NODE})" env TERM=xterm /bin/bash -c "cd
+  /opt/bdr-infra-stack/${MODULE} && ansible-playbook ${PLAYBOOK} -i ${INVENTORY}"
+notifications:
+  slack:
+    secure: G3rBT3RFoSsDotRVayUH5D1q449ImstYuys1Ho1wpswP33FY5usOu8Qv3+CFG/GThFIUuROJ4dSkuembzBSG1aBsd4G3LqG+wu/X4fzMSgiQ0HykiKYPWbm96nq7xmmkB9KiC3dhBBvNYPdn27jY/UEXyETnArd1lnKnj5FXiEhHsTve9xi/7Cjsf9115qZKKcnD1r40+CXgLBMMWTbe99xas/N9+p56r6mGMdDhr2cagV6Y+chBi5UtQj7WOgN8bXVyXHp+mSiPsW7p/9CfLRFCHZgPICp9SQ2JcF+gK3qpFtEDy407xsh8ErzX1DqZC9stHL+glIPa+Dwq306k7P9YOXeN5QqVGDQk5HoWwndV0Jiyh1XWGPFQKle8ozFiEPG20366WSt2d8D7UkLgkg8wPh5DdbBv4HD46d4/nDJqa+vbYnPVBU3faf/ZOUSJwQAsez8IfVOI3/dsbmsG2tFsc7EFJsw7DBwLI4xiquEhngOs/H+napM/MmgPRm6xn4AHmEmKfmGQcnJvYNnNtnQwxestRF6x8pw6zq7TF0VEAqttAfbn6j+ciMZlonmCDhEUXda7bwYEF8JYSpo0B2zo/n1dXX0YeJwR8XJLu6bUMu60ze+rfl2Ymmh9WDhcNcbMUKtf1GEqUMbe0gVvJx1RB1Q6XnBNY897mn6i0As=

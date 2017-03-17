@@ -1,0 +1,70 @@
+---
+
+- assert:
+    that:
+      - "zookeeper_id is defined"
+      - "zookeeper_hosts is defined"
+
+- name: create group
+  group:
+    name: "{{ zookeeper_group}}"
+    state: present
+
+- name: create user
+  user:
+    name: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_group }}"
+
+- name: Install zookeeper and its daemon
+  yum: name="{{item}}" state=present
+  with_items:
+    - "zookeeper-server"
+    - "zookeeper"
+
+- name: Create zookeeper dirs
+  file: path="{{ item }}" state=directory recurse=yes owner="{{ zookeeper_user }}" group="{{ zookeeper_group }}" mode=755
+  with_items:
+    - "{{ zookeeper_data_dir }}"
+    - "{{ zookeeper_pid_dir }}"
+    - "{{ zookeeper_log_dir }}"
+    - "{{ zookeeper_conf_dir }}"
+
+- name: Overwrite myid file
+  template: src=myid.j2 dest="{{ zookeeper_data_dir }}/myid" owner="{{ zookeeper_user }}" group="{{ zookeeper_group }}" mode=755
+  register: tmp_zookeeper_myid
+
+- name: Overwrite default config file
+  template: src=zoo.cfg.j2 dest="{{ zookeeper_conf_dir }}/zoo.cfg" owner="{{ zookeeper_user }}" group="{{ zookeeper_group }}" mode=755
+  register: tmp_zookeeper_cfg
+
+- name: Overwrite default env file
+  template: src=zookeeper-env.sh.j2 dest="{{ zookeeper_conf_dir }}/zookeeper-env.sh" owner="{{ zookeeper_user }}" group="{{ zookeeper_group }}" mode=755
+  register: tmp_zookeeper_env
+
+- name: Create custom server start script
+  template: src=zookeeper-server.sh dest="{{ zookeeper_home_dir }}/bin/zookeeper-server.sh" owner="{{ zookeeper_user }}" group="{{ zookeeper_group }}" mode=755
+  register: tmp_zookeeper_env
+
+- name: install zookeeper-server service
+  template: src=zookeeper-server-systemd.j2 dest=/etc/systemd/system/zookeeper-server.service owner=root group=root mode=755
+  register: tmp_zookeeper_service
+
+- name: reload services
+  command: systemctl daemon-reload
+  when: tmp_zookeeper_service.changed
+
+- name: restart zookeeper service if anything changed
+  service: name=zookeeper-server state=restarted
+  when: tmp_zookeeper_service.changed or tmp_zookeeper_myid.changed or tmp_zookeeper_cfg.changed or tmp_zookeeper_env.changed
+
+- name: start zookeeper service if nothing chagned
+  service: name=zookeeper-server state=started
+  when: not(tmp_zookeeper_service.changed or tmp_zookeeper_myid.changed or tmp_zookeeper_cfg.changed or tmp_zookeeper_env.changed)
+
+- name: Define Outputs
+  set_fact:
+    zookeeper: "{{ {'output': {'connect': zookeeper_hosts | format_list('%s:' + '%d' % zookeeper_client_port) }} }}"
+
+- name: Show zookeeper outputs
+  debug: var=zookeeper
+

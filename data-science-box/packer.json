@@ -1,0 +1,112 @@
+{
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "packer/ansible.sh"
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "provision.yml",
+      "playbook_dir": ".",
+      "inventory_file": "example-inventory/dev",
+      "role_paths": [
+        "../common/components/anaconda",
+        "../common/components/cert",
+        "../common/components/conda_env",
+        "../common/components/monitoring",
+        "../common/components/octave",
+        "../common/components/repositories",
+        "../common/components/spark_client",
+        "../common/components/spark_client_kernel"
+      ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "packer/cleanup.sh"
+    }
+  ],
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "format": "ova",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 81920,
+      "guest_os_type": "RedHat_64",
+      "headless": true,
+      "http_directory": "packer/http",
+      "iso_urls": [
+        "CentOS-7-x86_64-Minimal-1611.iso",
+        "http://ftp.wrz.de/pub/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1611.iso"
+      ],
+      "iso_checksum_type": "sha256",
+      "iso_checksum": "27bd866242ee058b7a5754e83d8ee8403e216b93d130d800852a96f41c34d86a",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo 'vagrant'|sudo -S /sbin/halt -h -p",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "packer-data-science-box",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "8192"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "4"
+        ]
+      ]
+    },
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "output-virtualbox-iso/data-science-box.ova",
+      "format": "ova",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "headless": true,
+      "http_directory": "packer/http",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo 'vagrant'|sudo -S /sbin/halt -h -p",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "packer-data-science-box",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "8192"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "4"
+        ]
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "output": "builds/data-science-box.box",
+      "type": "vagrant",
+      "keep_input_artifact": true
+    }
+  ]
+}
