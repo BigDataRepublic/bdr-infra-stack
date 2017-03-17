@@ -14,3 +14,5 @@
     - daemon_reload
     - restart_jupyter
 
+- name: Ensure jupyter is started
+  service: name=jupyter enabled=yes state=started
