@@ -70,7 +70,7 @@
     },
     {
       "type": "virtualbox-ovf",
-      "source_path": "output-virtualbox-iso/data-science-box.ova",
+      "source_path": "output-virtualbox-iso/packer-data-science-box.ova",
       "format": "ova",
       "boot_command": [
         "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
